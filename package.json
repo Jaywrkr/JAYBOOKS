@@ -14,6 +14,7 @@
     "@types/react-dom": "^19.0.2",
     "next": "^16.0.0",
     "@anthropic-ai/sdk": "^0.71.2",
+    "geist": "^1.7.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
