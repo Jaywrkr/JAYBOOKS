@@ -53,6 +53,14 @@ Deno.serve(async (request) => {
     return response({ book }, 201);
   }
 
+  if (request.method === "PATCH") {
+    const book = (body as { book?: unknown } | null)?.book;
+    if (!isBookCard(book)) return response({ error: "Tarjeta inválida." }, 400);
+    const { error } = await supabase.from("jaybooks_cards").update({ card: book }).eq("id", book.id);
+    if (error) return response({ error: "No se pudieron guardar los cambios." }, 500);
+    return response({ book });
+  }
+
   if (request.method === "DELETE") {
     const id = url.searchParams.get("id");
     if (!id) return response({ error: "Falta el identificador de la tarjeta." }, 400);

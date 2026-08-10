@@ -47,7 +47,6 @@ export function BookLibrary() {
   useEffect(() => {
     const savedCode = sessionStorage.getItem(ACCESS_SESSION_KEY);
     if (!savedCode) return;
-    setLoadingLibrary(true);
     requestLibrary(savedCode)
       .then((savedBooks) => { setBooks(savedBooks); setAccessCode(savedCode); setReady(true); })
       .catch(() => sessionStorage.removeItem(ACCESS_SESSION_KEY))
@@ -101,6 +100,18 @@ export function BookLibrary() {
     setSelected(null);
   }
 
+  async function updateBook(book: BookCard) {
+    const response = await fetch("/api/books", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "x-jaybooks-pin": accessCode },
+      body: JSON.stringify({ book }),
+    });
+    const payload = (await response.json()) as { error?: string };
+    if (!response.ok) throw new Error(payload.error || "No se pudieron guardar los cambios.");
+    setBooks((current) => current.map((item) => item.id === book.id ? book : item));
+    setSelected(book);
+  }
+
   if (!ready) {
     return <main className="access-gate"><section className="access-card" aria-labelledby="access-title">
       <a className="brand" href="#top">JAY<span>BOOKS</span></a>
@@ -126,7 +137,7 @@ export function BookLibrary() {
           {visibleBooks.length === 0 ? <div className="empty-state"><h3>{books.length ? "No encontramos esa tarjeta" : "Haz que una lectura cuente"}</h3><p>{books.length ? "Prueba con otro término de búsqueda." : "Sube una página o pega un resumen. Claude se encarga de la ficha."}</p></div> : <div className="book-grid">{visibleBooks.map((book) => <button className="book-card" key={book.id} onClick={() => setSelected(book)}><div className={`cover cover-${book.nivel_relevancia}`}>{book.portada ? <Image src={book.portada} alt="" fill sizes="(max-width: 700px) 35vw, 33vw" unoptimized /> : <span>{book.titulo.slice(0, 1).toUpperCase()}</span>}</div><div className="card-copy"><span className="card-category">{book.categoria || "Lectura"}</span><h3>{book.titulo}</h3><p>{book.autor || "Autor no visible"}</p><span className="open-detail">Ver ficha <span aria-hidden="true">↗</span></span></div></button>)}</div>}
         </section>
       </div>
-      <BookDetail book={selected} onClose={() => setSelected(null)} onDelete={deleteBook} />
+      <BookDetail key={selected?.id ?? "closed"} book={selected} onClose={() => setSelected(null)} onDelete={deleteBook} onUpdate={updateBook} />
     </main>
   );
 }
