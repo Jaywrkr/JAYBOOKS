@@ -68,15 +68,15 @@ export function BookForm({ onExtracted }: Props) {
   return (
     <form className="capture-form" onSubmit={handleSubmit}>
       <div className="form-heading">
-        <span className="eyebrow">Nueva tarjeta</span>
-        <h2>Convierte una nota en una idea accionable.</h2>
+        <span className="eyebrow">Captura</span>
+        <h2>Del libro a la acción.</h2>
       </div>
       <label className="field-label" htmlFor="summary">Resumen, notas o texto visible</label>
       <textarea
         id="summary"
         value={summary}
         onChange={(event) => setSummary(event.target.value)}
-        placeholder="Pega aquí el resumen del libro o tus notas…"
+        placeholder="Pega un resumen o una nota del libro…"
         rows={5}
       />
       <div className="form-footer">
