@@ -7,12 +7,32 @@ import { BookForm } from "./book-form";
 import type { BookCard, BookInsight } from "../types";
 
 const ACCESS_SESSION_KEY = "jaybooks-access-code";
+const LEGACY_STORAGE_KEY = "jaybooks-library-v1";
 
 async function requestLibrary(accessCode: string) {
   const response = await fetch("/api/books", { headers: { "x-jaybooks-pin": accessCode }, cache: "no-store" });
   const payload = (await response.json()) as { books?: BookCard[]; error?: string };
   if (!response.ok) throw new Error(payload.error || "No se pudo cargar la biblioteca.");
   return payload.books ?? [];
+}
+
+function readLegacyBooks() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LEGACY_STORAGE_KEY) || "[]");
+    return Array.isArray(saved) ? saved as BookCard[] : [];
+  } catch {
+    return [];
+  }
+}
+
+async function saveBook(accessCode: string, book: BookCard) {
+  const response = await fetch("/api/books", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-jaybooks-pin": accessCode },
+    body: JSON.stringify({ book }),
+  });
+  const payload = (await response.json()) as { error?: string };
+  if (!response.ok) throw new Error(payload.error || "No se pudo guardar la tarjeta.");
 }
 
 export function BookLibrary() {
@@ -50,8 +70,14 @@ export function BookLibrary() {
     setAccessError("");
     try {
       const savedBooks = await requestLibrary(submittedCode);
+      const cloudIds = new Set(savedBooks.map((book) => book.id));
+      const legacyBooks = readLegacyBooks()
+        .filter((book) => !cloudIds.has(book.id))
+        .map((book) => ({ ...book, portada: null }));
+      for (const legacyBook of legacyBooks) await saveBook(submittedCode, legacyBook);
+      if (legacyBooks.length) localStorage.removeItem(LEGACY_STORAGE_KEY);
       sessionStorage.setItem(ACCESS_SESSION_KEY, submittedCode);
-      setBooks(savedBooks);
+      setBooks([...legacyBooks, ...savedBooks]);
       setReady(true);
     } catch (error) {
       setAccessError(error instanceof Error ? error.message : "No se pudo abrir la biblioteca.");
@@ -62,13 +88,7 @@ export function BookLibrary() {
 
   async function addBook(insight: BookInsight, _cover: string | null) {
     const book: BookCard = { ...insight, id: crypto.randomUUID(), portada: null, createdAt: new Date().toISOString() };
-    const response = await fetch("/api/books", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-jaybooks-pin": accessCode },
-      body: JSON.stringify({ book }),
-    });
-    const payload = (await response.json()) as { error?: string };
-    if (!response.ok) throw new Error(payload.error || "No se pudo guardar la tarjeta.");
+    await saveBook(accessCode, book);
     setBooks((current) => [book, ...current]);
     setSelected(book);
   }
