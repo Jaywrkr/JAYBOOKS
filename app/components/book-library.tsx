@@ -42,7 +42,6 @@ export function BookLibrary() {
   }, [books, query]);
 
   const highRelevanceCount = books.filter((book) => book.nivel_relevancia === "alta").length;
-  const featuredBook = books[0];
 
   function addBook(insight: BookInsight, cover: string | null) {
     const book: BookCard = {
@@ -70,31 +69,16 @@ export function BookLibrary() {
       <div className="page-shell" id="top">
         <section className="hero">
           <div className="hero-copy-block">
-            <span className="eyebrow">Biblioteca personal · 01</span>
-            <h1>Menos notas.<br /><em>Más impacto.</em></h1>
-            <p className="hero-copy">Convierte cada lectura en una decisión, un post o una conversación que mueva tu trabajo.</p>
+            <span className="eyebrow">Biblioteca personal</span>
+            <h1>Ideas de libros.<br /><em>En acción.</em></h1>
+            <p className="hero-copy">Guarda lo importante. Vuelve a usarlo cuando lo necesites.</p>
             <div className="hero-actions">
               <a className="hero-button" href="#capture">Nueva tarjeta <span aria-hidden="true">↘</span></a>
-              <span className="hero-caption">{highRelevanceCount} ideas de alta prioridad</span>
+              <span className="hero-caption">{books.length} tarjetas · {highRelevanceCount} prioritarias</span>
             </div>
-          </div>
-          <div className="hero-visual" aria-hidden="true">
-            <div className="visual-grid" />
-            <div className="hero-book hero-book-left">READ<br />→ USE</div>
-            <div className="hero-book hero-book-right">{featuredBook?.titulo || "JAY"}</div>
-            <div className="hero-book hero-book-main">
-              {featuredBook?.portada ? <Image src={featuredBook.portada} alt="" fill sizes="240px" unoptimized /> : <span>J</span>}
-              <small>{featuredBook ? "ÚLTIMA TARJETA" : "TU PRIMERA IDEA"}</small>
-            </div>
-            <span className="visual-index">01—24</span>
           </div>
         </section>
         <div id="capture"><BookForm onExtracted={addBook} /></div>
-        <section className="signal-row" aria-label="Resumen de biblioteca">
-          <div><span>Tarjetas</span><strong>{books.length.toString().padStart(2, "0")}</strong></div>
-          <div><span>Alta relevancia</span><strong>{highRelevanceCount.toString().padStart(2, "0")}</strong></div>
-          <p><i />Guardado en este navegador</p>
-        </section>
         <section className="library-section" aria-labelledby="library-heading">
           <div className="library-toolbar">
             <div>
@@ -108,7 +92,6 @@ export function BookLibrary() {
           </div>
           {!hydrated ? <div className="empty-state">Cargando biblioteca…</div> : visibleBooks.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-books" aria-hidden="true"><i /><i /><i /></div>
               <h3>{books.length ? "No encontramos esa tarjeta" : "Haz que una lectura cuente"}</h3>
               <p>{books.length ? "Prueba con otro término de búsqueda." : "Sube una página o pega un resumen. Claude se encarga de la ficha."}</p>
             </div>
